@@ -17,4 +17,5 @@ android {
 
 dependencies {
 	compile project(':webp-android-backport-library')
+	compile "commons-io:commons-io:+"
 }

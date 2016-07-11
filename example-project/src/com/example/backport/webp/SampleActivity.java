@@ -3,26 +3,20 @@ package com.example.backport.webp;
 import android.app.Activity;
 import android.backport.webp.WebPFactory;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageView;
 
+import org.apache.commons.io.IOUtils;
+
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 
 public class SampleActivity extends Activity {
-    private static byte[] streamToBytes(InputStream is) {
-        ByteArrayOutputStream os = new ByteArrayOutputStream(1024);
-        byte[] buffer = new byte[1024];
-        int len;
-        try {
-            while ((len = is.read(buffer)) >= 0) {
-                os.write(buffer, 0, len);
-            }
-        } catch (java.io.IOException e) {
-        }
-        return os.toByteArray();
-    }
 
     ImageView _imageView = null;
 
@@ -38,6 +32,9 @@ public class SampleActivity extends Activity {
 
     public void onButtonClick(View view) {
         int imageId;
+        BitmapFactory.Options options = null;
+        InputStream rawImageStream = null;
+        byte[] data = null;
         switch (view.getId()) {
             case R.id.loadImage1:
                 imageId = R.raw.image;
@@ -48,12 +45,52 @@ public class SampleActivity extends Activity {
             case R.id.loadImage3:
                 imageId = R.raw.image_alpha_lossy;
                 break;
+            case R.id.loadImage4:
+                imageId = R.raw.image_alpha_lossy;
+                //resize using inSampleSize
+                options = new BitmapFactory.Options();
+                options.inSampleSize = 2;
+                break;
             default:
                 return;
         }
-        InputStream rawImageStream = getResources().openRawResource(imageId);
-        byte[] data = streamToBytes(rawImageStream);
-        final Bitmap webpBitmap = WebPFactory.decode(data, null);
+        if(data==null) {
+            data = getBytes(imageId);
+        }
+        final Bitmap webpBitmap = WebPFactory.decode(data, options);
+        _imageView.setImageBitmap(webpBitmap);
+
+    }
+
+    private byte[] getBytes(int imageId) {
+        byte[] data;
+        try {
+            data = IOUtils.toByteArray(getResources().openRawResource(imageId));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return data;
+    }
+
+    public void onButtonClickFile(View view) {
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 4;
+        //copy file from stream
+        File outputFile;
+        InputStream rawImageStream=null;
+        FileOutputStream fos=null;
+        try {
+            rawImageStream = getResources().openRawResource(R.raw.image_alpha_lossy);
+            outputFile = File.createTempFile("sample", "", getCacheDir());
+            fos = new FileOutputStream(outputFile);
+            IOUtils.copy(getResources().openRawResource(R.raw.image_alpha_lossy), fos);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }finally{
+            IOUtils.closeQuietly(rawImageStream);
+            IOUtils.closeQuietly(fos);
+        }
+        final Bitmap webpBitmap = WebPFactory.decode(outputFile.getAbsolutePath(), options);
         _imageView.setImageBitmap(webpBitmap);
 
     }

@@ -31,8 +31,10 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 	// __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Using WebP Decoder %08x", WebPGetDecoderVersion());
 
     //reset outWidth and outHeight in case of error it should be -1
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
+    if(options){
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
+	}
 
 	// Lock buffer
 	jbyte* inputBuffer = jniEnv->GetByteArrayElements(byteArray, NULL);
@@ -151,9 +153,12 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 	// Unlock buffer
 	jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
 
-    // Set width and height values
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
+    if (options)
+    {
+	    // Set width and height values
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
+	}
 
 	return outputBitmap;
 }
@@ -176,9 +181,11 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 	// Log what version of WebP is used
 	//__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Using WebP Decoder %08x", WebPGetDecoderVersion());
 
-    //reset outWidth and outHeight in case of error it should be -1
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
+	if(options){
+	    //reset outWidth and outHeight in case of error it should be -1
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
+	}
 
 
     char *inputBuffer;
@@ -239,7 +246,7 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
     WebPDecoderConfig config;
     if (!WebPInitDecoderConfig(&config))
     {
-        jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
+        free(inputBuffer);
         jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Unable to init WebP decoder config");
         return 0;
     }
@@ -325,9 +332,12 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 	// Release buffer
     free(inputBuffer);
 
-    // Set width and height values
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
-    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
+    if (options)
+    {
+	    // Set width and height values
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
+	    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
+	}
 
 	return outputBitmap;
 }

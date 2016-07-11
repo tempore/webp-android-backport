@@ -4,18 +4,18 @@
     android:layout_height="fill_parent"
     android:orientation="vertical">
 
+    <Button
+        android:id="@+id/loadImage1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:onClick="onButtonClick"
+        android:text="No alpha" />
+
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/loadImage1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:onClick="onButtonClick"
-            android:text="No alpha" />
 
         <Button
             android:id="@+id/loadImage2"
@@ -32,12 +32,27 @@
             android:layout_gravity="center_vertical"
             android:onClick="onButtonClick"
             android:text="Alpha lossy" />
+
+        <Button
+            android:id="@+id/loadImage4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:onClick="onButtonClick"
+            android:text="Resize/2" />
     </LinearLayout>
+
+    <Button
+        android:id="@+id/loadImage5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:onClick="onButtonClickFile"
+        android:text="ResizeFile/4" />
 
     <ImageView
         android:id="@+id/imageView"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:scaleType="fitCenter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:src="@drawable/ic_launcher" />
 </LinearLayout>
