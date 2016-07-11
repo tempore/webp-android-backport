@@ -28,7 +28,11 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 	}
 
 	// Log what version of WebP is used
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Using WebP Decoder %08x", WebPGetDecoderVersion());
+	// __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Using WebP Decoder %08x", WebPGetDecoderVersion());
+
+    //reset outWidth and outHeight in case of error it should be -1
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
 
 	// Lock buffer
 	jbyte* inputBuffer = jniEnv->GetByteArrayElements(byteArray, NULL);
@@ -55,7 +59,36 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 
 		return 0;
 	}
-	__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Decoding %dx%d bitmap", bitmapWidth, bitmapHeight);
+
+    // Initialize decoder config and configure scaling if requested
+    WebPDecoderConfig config;
+    if (!WebPInitDecoderConfig(&config))
+    {
+        jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
+        jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Unable to init WebP decoder config");
+        return 0;
+    }
+
+    if (options)
+    {
+        jint inSampleSize = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inSampleSize);
+        bool inScaled = (jniEnv->GetBooleanField(options, jrefs::android::graphics::BitmapFactory->Options.inScaled) == JNI_TRUE);
+        jint inDensity = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inDensity);
+        jint inTargetDensity = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inTargetDensity);
+        if(inScaled && inDensity > 0 && inTargetDensity > 0){
+                jint divider = (inSampleSize > 1 ? inSampleSize : 1) * inDensity;
+                config.options.use_scaling = 1;
+                config.options.scaled_width = bitmapWidth = (bitmapWidth * inTargetDensity) / divider;
+                config.options.scaled_height = bitmapHeight = (bitmapHeight * inTargetDensity) / divider;
+        }
+        else if (inSampleSize > 1)
+        {
+                config.options.use_scaling = 1;
+                config.options.scaled_width = bitmapWidth /= inSampleSize;
+                config.options.scaled_height = bitmapHeight /= inSampleSize;
+        }
+    }
+	// __android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Decoding %dx%d bitmap", bitmapWidth, bitmapHeight);
 
 	// Create bitmap
 	jobject value__ARGB_8888 = jniEnv->GetStaticObjectField(jrefs::android::graphics::Bitmap->Config.jclassRef, jrefs::android::graphics::Bitmap->Config.ARGB_8888);
@@ -90,15 +123,21 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 		return 0;
 	}
 
-	// Decode to ARGB
-	if(!WebPDecodeRGBAInto((uint8_t*)inputBuffer, inputBufferLen, (uint8_t*)bitmapPixels, bitmapInfo.height * bitmapInfo.stride, bitmapInfo.stride))
-	{
-		AndroidBitmap_unlockPixels(jniEnv, outputBitmap);
-		jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
-		jniEnv->DeleteLocalRef(outputBitmap);
-		jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Failed to unlock Bitmap pixels");
-		return 0;
-	}
+
+    //Decode to rgbA bitmap image is Premultiplied in android
+    config.output.colorspace = MODE_rgbA;
+    config.output.u.RGBA.rgba = (uint8_t*)bitmapPixels;
+    config.output.u.RGBA.stride = bitmapInfo.stride;
+    config.output.u.RGBA.size = bitmapInfo.height * bitmapInfo.stride;
+    config.output.is_external_memory = 1;
+    if (WebPDecode((uint8_t*)inputBuffer, inputBufferLen, &config) != VP8_STATUS_OK)
+    {
+            AndroidBitmap_unlockPixels(jniEnv, outputBitmap);
+            jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
+            jniEnv->DeleteLocalRef(outputBitmap);
+            jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Failed to decode WebP pixel data");
+            return 0;
+    }
 
 	// Unlock pixels
 	if(AndroidBitmap_unlockPixels(jniEnv, outputBitmap) != ANDROID_BITMAP_RESUT_SUCCESS)
@@ -111,6 +150,10 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 	
 	// Unlock buffer
 	jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
+
+    // Set width and height values
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
 
 	return outputBitmap;
 }
@@ -132,6 +175,11 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 
 	// Log what version of WebP is used
 	//__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Using WebP Decoder %08x", WebPGetDecoderVersion());
+
+    //reset outWidth and outHeight in case of error it should be -1
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, -1);
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, -1);
+
 
     char *inputBuffer;
     size_t inputBufferLen;
@@ -186,6 +234,35 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 
 		return 0;
 	}
+
+    // Initialize decoder config and configure scaling if requested
+    WebPDecoderConfig config;
+    if (!WebPInitDecoderConfig(&config))
+    {
+        jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
+        jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Unable to init WebP decoder config");
+        return 0;
+    }
+
+    if (options)
+    {
+        jint inSampleSize = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inSampleSize);
+        bool inScaled = (jniEnv->GetBooleanField(options, jrefs::android::graphics::BitmapFactory->Options.inScaled) == JNI_TRUE);
+        jint inDensity = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inDensity);
+        jint inTargetDensity = jniEnv->GetIntField(options, jrefs::android::graphics::BitmapFactory->Options.inTargetDensity);
+        if(inScaled && inDensity > 0 && inTargetDensity > 0){
+                jint divider = (inSampleSize > 1 ? inSampleSize : 1) * inDensity;
+                config.options.use_scaling = 1;
+                config.options.scaled_width = bitmapWidth = (bitmapWidth * inTargetDensity) / divider;
+                config.options.scaled_height = bitmapHeight = (bitmapHeight * inTargetDensity) / divider;
+        }
+        else if (inSampleSize > 1)
+        {
+                config.options.use_scaling = 1;
+                config.options.scaled_width = bitmapWidth /= inSampleSize;
+                config.options.scaled_height = bitmapHeight /= inSampleSize;
+        }
+    }
 	//__android_log_print(ANDROID_LOG_INFO, LOG_TAG, "Decoding %dx%d bitmap", bitmapWidth, bitmapHeight);
 
 	// Create bitmap
@@ -221,8 +298,13 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 		return 0;
 	}
 
-	// Decode to ARGB
-	if(!WebPDecodeRGBAInto((uint8_t*)inputBuffer, inputBufferLen, (uint8_t*)bitmapPixels, bitmapInfo.height * bitmapInfo.stride, bitmapInfo.stride))
+    //Decode to rgbA bitmap image is Premultiplied in android
+    config.output.colorspace = MODE_rgbA;
+    config.output.u.RGBA.rgba = (uint8_t*)bitmapPixels;
+    config.output.u.RGBA.stride = bitmapInfo.stride;
+    config.output.u.RGBA.size = bitmapInfo.height * bitmapInfo.stride;
+    config.output.is_external_memory = 1;
+    if (WebPDecode((uint8_t*)inputBuffer, inputBufferLen, &config) != VP8_STATUS_OK)
 	{
 		AndroidBitmap_unlockPixels(jniEnv, outputBitmap);
         free(inputBuffer);
@@ -242,6 +324,10 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 
 	// Release buffer
     free(inputBuffer);
+
+    // Set width and height values
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outWidth, bitmapWidth);
+    jniEnv->SetIntField(options, jrefs::android::graphics::BitmapFactory->Options.outHeight, bitmapHeight);
 
 	return outputBitmap;
 }

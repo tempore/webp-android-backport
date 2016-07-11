@@ -1,4 +1,7 @@
-APP_ABI := all
+#APP_ABI := all
+#dont need arch introdiced after android 4.2.1
+APP_ABI := armeabi armeabi-v7a x86 mips
+
 APP_CPPFLAGS := -fno-rtti -fno-exceptions
 APP_PLATFORM := android-8
 
