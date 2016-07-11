@@ -53,8 +53,7 @@ public class SampleActivity extends Activity {
         }
         InputStream rawImageStream = getResources().openRawResource(imageId);
         byte[] data = streamToBytes(rawImageStream);
-        final Bitmap webpBitmap = WebPFactory.nativeDecodeByteArray(
-                data, null);
+        final Bitmap webpBitmap = WebPFactory.decode(data, null);
         _imageView.setImageBitmap(webpBitmap);
 
     }
