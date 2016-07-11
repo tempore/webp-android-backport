@@ -2,31 +2,42 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
-	<LinearLayout
-	    android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:orientation="horizontal">
-		<Button android:id="@+id/loadEmbeddedImage"
-		    android:text="Load embedded"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_vertical"/>
-		<Button android:id="@+id/findAndLoadImage"
-		    android:text="Find &amp; Load"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_vertical"/>
-		<Button android:id="@+id/captureImage"
-		    android:text="Capture &amp; Load"
-			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
-			android:layout_gravity="center_vertical"/>
-	</LinearLayout>
-	
-	<ImageView android:id="@+id/imageView"
-	    android:src="@drawable/ic_launcher"
-	    android:scaleType="fitCenter"
-	    android:layout_width="fill_parent"
-	    android:layout_height="fill_parent"/>
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/loadImage1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:onClick="onButtonClick"
+            android:text="No alpha" />
+
+        <Button
+            android:id="@+id/loadImage2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:onClick="onButtonClick"
+            android:text="Alpha lossless" />
+
+        <Button
+            android:id="@+id/loadImage3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:onClick="onButtonClick"
+            android:text="Alpha lossy" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_launcher" />
 </LinearLayout>
