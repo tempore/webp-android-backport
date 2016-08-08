@@ -47,14 +47,6 @@ public final class WebPFactory {
     private static native Bitmap nativeDecodeFile(String path, Options options);
 	
 	/**
-	 * Encodes bitmap into byte array
-	 * @param bitmap Bitmap
-	 * @param quality Quality, should be between 0 and 100
-	 * @return Encoded byte array
-	 */
-//	public static native byte[] nativeEncodeBitmap(Bitmap bitmap, int quality);
-
-	/**
 	 * Verify bitmap's format
 	 *
 	 * @param data
