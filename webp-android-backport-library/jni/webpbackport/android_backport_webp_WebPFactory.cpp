@@ -100,7 +100,7 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeByt
 	if(!outputBitmap)
 	{
 		jniEnv->ReleaseByteArrayElements(byteArray, inputBuffer, JNI_ABORT);
-		jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Failed to allocate Bitmap");
+		jniEnv->ThrowNew(jrefs::java::lang::OutOfMemoryError->jclassRef, "Failed to allocate Bitmap");
 		return 0;
 	}
 	outputBitmap = jniEnv->NewLocalRef(outputBitmap);
@@ -280,7 +280,7 @@ JNIEXPORT jobject JNICALL Java_android_backport_webp_WebPFactory_nativeDecodeFil
 	if(!outputBitmap)
 	{
         free(inputBuffer);
-		jniEnv->ThrowNew(jrefs::java::lang::RuntimeException->jclassRef, "Failed to allocate Bitmap");
+		jniEnv->ThrowNew(jrefs::java::lang::OutOfMemoryError->jclassRef, "Failed to allocate Bitmap");
 		return 0;
 	}
 	outputBitmap = jniEnv->NewLocalRef(outputBitmap);
