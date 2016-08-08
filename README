@@ -1,6 +1,65 @@
-Proxy wrapper-library of WebP library for Android OS versions 2.2-3.2
+A WebP image format decoder library for Android 2.2-4.2
+
+Build instructions:
+
+- Install sdk
+- Install ndk
+- Make sure that ndk-build is in your build path.
+
+Fetch the git submodules
+
+  git submodule init
+  git submodule update
+
+Build native libaries
+  
+  cd ./webp-android-backport-library
+  ndk-build
+
+After that build the project using "gradle build" or use Android Studio. 
+
+
+Usage:
+
+if(WebPFactory.IS_SUPPORTED){
+		
+		//options may be null
+        BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inSampleSize = 2;
+
+
+        //Options supported 
+        // inJustDecodeBounds
+        // outHeight
+        // outWidth
+        // inSampleSize
+        // inScaled
+        // inDensity
+        // inTargetDensity
+
+
+        try{
+	        //load bitmap from byte array
+	        byte[] data = ... load byte array ..
+	        final Bitmap webpBitmap = WebPFactory.decode(data, options);
+			
+			//or from file
+	        final Bitmap webpBitmapFromFile = WebPFactory.decode(filePath, options);
+
+        }catch(OutOfMemoryError oom){
+        	//process some cleanup
+        }
+
+
+}else{
+	//Android 2.1 or less - use PNG instead of WebP
+
+}
+
+
 
 Copyright 2012-2015 Alexey Pelykh
+Copyright 2015-2016 Ivan Churkin
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
